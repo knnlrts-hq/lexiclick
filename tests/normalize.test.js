@@ -2,7 +2,7 @@ import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 import { loadCoreFunctions } from './setup.js';
 
-const { normalize, wiktionaryUrl, tatoebaProxyUrl, LANGS } = loadCoreFunctions();
+const { normalize, wiktionaryUrl, tatoebaUrl, LANGS } = loadCoreFunctions();
 
 describe('normalize', () => {
   // --- Punctuation stripping ---
@@ -114,23 +114,25 @@ describe('wiktionaryUrl', () => {
   });
 });
 
-describe('tatoebaProxyUrl', () => {
-  it('builds French proxy URL with correct lang code', () => {
-    const url = tatoebaProxyUrl('bonjour', 'fr');
+describe('tatoebaUrl', () => {
+  it('builds French URL calling Tatoeba API directly', () => {
+    const url = tatoebaUrl('bonjour', 'fr');
+    assert.ok(url.includes('api.tatoeba.org/v1/sentences'));
     assert.ok(url.includes('q=bonjour'));
-    assert.ok(url.includes('from=fra'));
-    assert.ok(url.includes('to=eng'));
+    assert.ok(url.includes('lang=fra'));
+    assert.ok(url.includes('trans:lang=eng'));
+    assert.ok(url.includes('sort=relevance'));
   });
 
-  it('builds German proxy URL with correct lang code', () => {
-    const url = tatoebaProxyUrl('hallo', 'de');
+  it('builds German URL with correct lang code', () => {
+    const url = tatoebaUrl('hallo', 'de');
     assert.ok(url.includes('q=hallo'));
-    assert.ok(url.includes('from=deu'));
-    assert.ok(url.includes('to=eng'));
+    assert.ok(url.includes('lang=deu'));
+    assert.ok(url.includes('trans:lang=eng'));
   });
 
   it('encodes special characters in query', () => {
-    const url = tatoebaProxyUrl('aujourd\'hui', 'fr');
+    const url = tatoebaUrl('aujourd\'hui', 'fr');
     assert.ok(url.includes("q=aujourd'hui") || url.includes('q=aujourd%27hui'));
   });
 });

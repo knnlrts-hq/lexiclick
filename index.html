@@ -224,8 +224,6 @@
     de: { wiktionary: 'de.wiktionary.org', tatoeba: 'deu' },
   };
 
-  const TATOEBA_PROXY = 'https://lexiclick-tatoeba.knnlrts-hq.workers.dev';
-
   function tokenize(text) {
     return text
       .split(/\n\s*\n/)
@@ -251,9 +249,13 @@
     return 'https://' + LANGS[lang].wiktionary + '/wiki/' + encodeURIComponent(term);
   }
 
-  function tatoebaProxyUrl(word, lang) {
-    return TATOEBA_PROXY + '/tatoeba?q=' + encodeURIComponent(word)
-      + '&from=' + LANGS[lang].tatoeba + '&to=eng';
+  function tatoebaUrl(word, lang) {
+    return 'https://api.tatoeba.org/v1/sentences'
+      + '?lang=' + LANGS[lang].tatoeba
+      + '&q=' + encodeURIComponent(word)
+      + '&trans:lang=eng'
+      + '&sort=relevance'
+      + '&limit=5';
   }
   // === END CORE LOGIC ===
 
@@ -333,7 +335,7 @@
 
   async function fetchTatoeba(word) {
     try {
-      const resp = await fetch(tatoebaProxyUrl(word, currentLang));
+      const resp = await fetch(tatoebaUrl(word, currentLang));
       if (!resp.ok) throw new Error(resp.status);
       const data = await resp.json();
       renderTatoeba(data.data || []);

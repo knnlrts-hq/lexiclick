@@ -6,7 +6,7 @@ export function loadCoreFunctions() {
   if (!match) throw new Error('Could not find CORE LOGIC block in index.html');
 
   const exports = [
-    'LANGS', 'TATOEBA_PROXY',
+    'LANGS',
     'tokenize', 'normalize', 'wiktionaryUrl', 'tatoebaProxyUrl',
   ];
   const returnExpr = exports
