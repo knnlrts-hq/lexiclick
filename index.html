@@ -4,8 +4,219 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Lexiclick</title>
+  <style>
+    :root {
+      --bg: #faf9f6;
+      --text: #2d2d2d;
+      --text-muted: #666;
+      --accent: #3b82f6;
+      --border: #e5e5e5;
+      --font-reading: Georgia, 'Times New Roman', serif;
+      --font-ui: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      --space-sm: 0.5rem;
+      --space-md: 1rem;
+      --space-lg: 2rem;
+      --space-xl: 3rem;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: var(--font-ui);
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: var(--space-md) var(--space-lg);
+      border-bottom: 1px solid var(--border);
+    }
+    .header h1 { font-size: 1.25rem; font-weight: 600; }
+
+    .lang-toggle { display: flex; }
+    .lang-btn {
+      padding: var(--space-sm) var(--space-md);
+      border: 1px solid var(--border);
+      background: white;
+      cursor: pointer;
+      font-size: 0.875rem;
+      font-weight: 500;
+    }
+    .lang-btn:first-child { border-radius: 4px 0 0 4px; }
+    .lang-btn:last-child { border-radius: 0 4px 4px 0; border-left: none; }
+    .lang-btn.active {
+      background: var(--accent);
+      color: white;
+      border-color: var(--accent);
+    }
+
+    .input-view {
+      max-width: 640px;
+      margin: var(--space-xl) auto;
+      padding: 0 var(--space-lg);
+    }
+    .input-view textarea {
+      width: 100%;
+      min-height: 200px;
+      padding: var(--space-md);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      font-family: var(--font-ui);
+      font-size: 1rem;
+      resize: vertical;
+      line-height: 1.5;
+    }
+    .input-view textarea:focus {
+      outline: none;
+      border-color: var(--accent);
+    }
+    .start-btn {
+      display: block;
+      margin: var(--space-md) auto 0;
+      padding: var(--space-sm) var(--space-lg);
+      background: var(--accent);
+      color: white;
+      border: none;
+      border-radius: 6px;
+      font-size: 1rem;
+      cursor: pointer;
+    }
+    .start-btn:hover { opacity: 0.9; }
+
+    .reading-view {
+      max-width: 640px;
+      margin: var(--space-lg) auto;
+      padding: 0 var(--space-lg);
+      display: none;
+    }
+    .back-link {
+      display: inline-block;
+      margin-bottom: var(--space-md);
+      color: var(--accent);
+      text-decoration: none;
+      font-size: 0.875rem;
+    }
+    .back-link:hover { text-decoration: underline; }
+    .reading-view p {
+      font-family: var(--font-reading);
+      font-size: 1.125rem;
+      line-height: 1.8;
+      margin-bottom: var(--space-md);
+    }
+    .word {
+      cursor: pointer;
+      border-bottom: 1px dotted transparent;
+    }
+    .word:hover { border-bottom-color: var(--text-muted); }
+
+    .modal-backdrop {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.4);
+      z-index: 100;
+      justify-content: center;
+      align-items: center;
+    }
+    .modal-backdrop.open { display: flex; }
+    .modal {
+      background: white;
+      border-radius: 8px;
+      width: 90%;
+      max-width: 600px;
+      max-height: 70vh;
+      overflow-y: auto;
+      box-shadow: 0 4px 24px rgba(0, 0, 0, 0.15);
+    }
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: var(--space-md) var(--space-lg);
+      border-bottom: 1px solid var(--border);
+    }
+    .modal-header h2 { font-size: 1.25rem; font-weight: 600; }
+    .close-btn {
+      background: none;
+      border: none;
+      font-size: 1.5rem;
+      cursor: pointer;
+      color: var(--text-muted);
+      line-height: 1;
+    }
+    .modal-section {
+      padding: var(--space-md) var(--space-lg);
+    }
+    .modal-section + .modal-section {
+      border-top: 1px solid var(--border);
+    }
+    .modal-section h3 {
+      font-size: 0.875rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-muted);
+      margin-bottom: var(--space-sm);
+    }
+    .example { margin-bottom: var(--space-md); }
+    .example .source { font-style: italic; }
+    .example .translation {
+      color: var(--text-muted);
+      font-size: 0.9rem;
+    }
+    .wiktionary-frame {
+      width: 100%;
+      height: 40vh;
+      border: none;
+    }
+    .loading {
+      color: var(--text-muted);
+      font-style: italic;
+    }
+
+    .hidden { display: none !important; }
+  </style>
 </head>
 <body>
+  <header class="header">
+    <h1>Lexiclick</h1>
+    <div class="lang-toggle">
+      <button class="lang-btn active" data-lang="fr">FR</button>
+      <button class="lang-btn" data-lang="de">DE</button>
+    </div>
+  </header>
+
+  <main id="input-view" class="input-view">
+    <textarea id="text-input" placeholder="Paste your text here..."></textarea>
+    <button id="start-btn" class="start-btn">Start Reading</button>
+  </main>
+
+  <main id="reading-view" class="reading-view">
+    <a href="#" id="back-link" class="back-link">&larr; New Text</a>
+    <div id="reading-content"></div>
+  </main>
+
+  <div id="modal-backdrop" class="modal-backdrop">
+    <div class="modal">
+      <div class="modal-header">
+        <h2 id="modal-word"></h2>
+        <button id="close-modal" class="close-btn">&times;</button>
+      </div>
+      <div class="modal-section">
+        <h3>Examples (Tatoeba)</h3>
+        <div id="tatoeba-results"><p class="loading">Looking up...</p></div>
+      </div>
+      <div class="modal-section">
+        <h3>Wiktionary</h3>
+        <iframe id="wiktionary-frame" class="wiktionary-frame"
+                sandbox="allow-scripts allow-same-origin"></iframe>
+      </div>
+    </div>
+  </div>
+
   <script>
   // === CORE LOGIC ===
   const LANGS = {
@@ -45,6 +256,41 @@
       + '&from=' + LANGS[lang].tatoeba + '&to=eng';
   }
   // === END CORE LOGIC ===
+
+  // === APP ===
+  let currentLang = 'fr';
+
+  const inputView = document.getElementById('input-view');
+  const readingView = document.getElementById('reading-view');
+  const textInput = document.getElementById('text-input');
+  const startBtn = document.getElementById('start-btn');
+  const backLink = document.getElementById('back-link');
+  const readingContent = document.getElementById('reading-content');
+
+  // Language toggle
+  document.querySelectorAll('.lang-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelector('.lang-btn.active').classList.remove('active');
+      btn.classList.add('active');
+      currentLang = btn.dataset.lang;
+    });
+  });
+
+  // Start reading
+  startBtn.addEventListener('click', () => {
+    const text = textInput.value.trim();
+    if (!text) return;
+    inputView.classList.add('hidden');
+    readingView.style.display = 'block';
+  });
+
+  // Back to input
+  backLink.addEventListener('click', (e) => {
+    e.preventDefault();
+    readingView.style.display = 'none';
+    inputView.classList.remove('hidden');
+  });
+  // === END APP ===
   </script>
 </body>
 </html>
