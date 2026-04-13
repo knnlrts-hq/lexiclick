@@ -266,6 +266,11 @@
   const startBtn = document.getElementById('start-btn');
   const backLink = document.getElementById('back-link');
   const readingContent = document.getElementById('reading-content');
+  const modalBackdrop = document.getElementById('modal-backdrop');
+  const modalWord = document.getElementById('modal-word');
+  const closeModalBtn = document.getElementById('close-modal');
+  const tatoebaResults = document.getElementById('tatoeba-results');
+  const wiktionaryFrame = document.getElementById('wiktionary-frame');
 
   // Language toggle
   document.querySelectorAll('.lang-btn').forEach(btn => {
@@ -295,6 +300,7 @@
         span.className = 'word';
         span.dataset.raw = tokens[i];
         span.textContent = tokens[i];
+        span.addEventListener('click', () => openModal(tokens[i]));
         p.appendChild(span);
         if (i < tokens.length - 1) {
           p.appendChild(document.createTextNode(' '));
@@ -309,6 +315,64 @@
     e.preventDefault();
     readingView.style.display = 'none';
     inputView.classList.remove('hidden');
+  });
+  function openModal(raw) {
+    const word = normalize(raw, currentLang);
+    if (!word) return;
+
+    modalWord.textContent = word;
+    tatoebaResults.innerHTML = '<p class="loading">Looking up...</p>';
+    wiktionaryFrame.src = wiktionaryUrl(word, currentLang);
+    modalBackdrop.classList.add('open');
+
+    fetchTatoeba(word);
+  }
+
+  async function fetchTatoeba(word) {
+    try {
+      const resp = await fetch(tatoebaProxyUrl(word, currentLang));
+      if (!resp.ok) throw new Error(resp.status);
+      const data = await resp.json();
+      renderTatoeba(data.results || []);
+    } catch {
+      tatoebaResults.innerHTML = '<p>Failed to load examples.</p>';
+    }
+  }
+
+  function renderTatoeba(results) {
+    if (results.length === 0) {
+      tatoebaResults.innerHTML = '<p>No examples found.</p>';
+      return;
+    }
+    tatoebaResults.innerHTML = '';
+    for (const r of results) {
+      const div = document.createElement('div');
+      div.className = 'example';
+      const translation = r.translations?.[0]?.[0]?.text || 'No translation available';
+      div.innerHTML =
+        '<p class="source">\u201c' + escapeHtml(r.text) + '\u201d</p>' +
+        '<p class="translation">\u2192 \u201c' + escapeHtml(translation) + '\u201d</p>';
+      tatoebaResults.appendChild(div);
+    }
+  }
+
+  function escapeHtml(str) {
+    const el = document.createElement('div');
+    el.textContent = str;
+    return el.innerHTML;
+  }
+
+  function dismissModal() {
+    modalBackdrop.classList.remove('open');
+    wiktionaryFrame.src = '';
+  }
+
+  closeModalBtn.addEventListener('click', dismissModal);
+  modalBackdrop.addEventListener('click', (e) => {
+    if (e.target === modalBackdrop) dismissModal();
+  });
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') dismissModal();
   });
   // === END APP ===
   </script>
