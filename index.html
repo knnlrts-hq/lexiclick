@@ -8,7 +8,13 @@
 <body>
   <script>
   // === CORE LOGIC ===
-  function tokenize() {}
+  function tokenize(text) {
+    return text
+      .split(/\n\s*\n/)
+      .map(p => p.trim())
+      .filter(p => p !== '')
+      .map(p => p.split(/\s+/));
+  }
   function normalize() {}
   function wiktionaryUrl() {}
   function tatoebaProxyUrl() {}
