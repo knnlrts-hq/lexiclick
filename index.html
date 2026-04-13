@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lexiclick</title>
+  <style>
+    :root {
+      --bg: #faf9f6;
+      --text: #2d2d2d;
+      --text-muted: #666;
+      --accent: #3b82f6;
+      --border: #e5e5e5;
+      --font-reading: Georgia, 'Times New Roman', serif;
+      --font-ui: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      --space-sm: 0.5rem;
+      --space-md: 1rem;
+      --space-lg: 2rem;
+      --space-xl: 3rem;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: var(--font-ui);
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: var(--space-md) var(--space-lg);
+      border-bottom: 1px solid var(--border);
+    }
+    .header h1 { font-size: 1.25rem; font-weight: 600; }
+
+    .lang-toggle { display: flex; }
+    .lang-btn {
+      padding: var(--space-sm) var(--space-md);
+      border: 1px solid var(--border);
+      background: white;
+      cursor: pointer;
+      font-size: 0.875rem;
+      font-weight: 500;
+    }
+    .lang-btn:first-child { border-radius: 4px 0 0 4px; }
+    .lang-btn:last-child { border-radius: 0 4px 4px 0; border-left: none; }
+    .lang-btn.active {
+      background: var(--accent);
+      color: white;
+      border-color: var(--accent);
+    }
+
+    .input-view {
+      max-width: 640px;
+      margin: var(--space-xl) auto;
+      padding: 0 var(--space-lg);
+    }
+    .input-view textarea {
+      width: 100%;
+      min-height: 200px;
+      padding: var(--space-md);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      font-family: var(--font-ui);
+      font-size: 1rem;
+      resize: vertical;
+      line-height: 1.5;
+    }
+    .input-view textarea:focus {
+      outline: none;
+      border-color: var(--accent);
+    }
+    .start-btn {
+      display: block;
+      margin: var(--space-md) auto 0;
+      padding: var(--space-sm) var(--space-lg);
+      background: var(--accent);
+      color: white;
+      border: none;
+      border-radius: 6px;
+      font-size: 1rem;
+      cursor: pointer;
+    }
+    .start-btn:hover { opacity: 0.9; }
+
+    .reading-view {
+      max-width: 640px;
+      margin: var(--space-lg) auto;
+      padding: 0 var(--space-lg);
+      display: none;
+    }
+    .back-link {
+      display: inline-block;
+      margin-bottom: var(--space-md);
+      color: var(--accent);
+      text-decoration: none;
+      font-size: 0.875rem;
+    }
+    .back-link:hover { text-decoration: underline; }
+    .reading-view p {
+      font-family: var(--font-reading);
+      font-size: 1.125rem;
+      line-height: 1.8;
+      margin-bottom: var(--space-md);
+    }
+    .word {
+      cursor: pointer;
+      border-bottom: 1px dotted transparent;
+    }
+    .word:hover { border-bottom-color: var(--text-muted); }
+
+    .modal-backdrop {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.4);
+      z-index: 100;
+      justify-content: center;
+      align-items: center;
+    }
+    .modal-backdrop.open { display: flex; }
+    .modal {
+      background: white;
+      border-radius: 8px;
+      width: 90%;
+      max-width: 600px;
+      max-height: 70vh;
+      overflow-y: auto;
+      box-shadow: 0 4px 24px rgba(0, 0, 0, 0.15);
+    }
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: var(--space-md) var(--space-lg);
+      border-bottom: 1px solid var(--border);
+    }
+    .modal-header h2 { font-size: 1.25rem; font-weight: 600; }
+    .close-btn {
+      background: none;
+      border: none;
+      font-size: 1.5rem;
+      cursor: pointer;
+      color: var(--text-muted);
+      line-height: 1;
+    }
+    .modal-section {
+      padding: var(--space-md) var(--space-lg);
+    }
+    .modal-section + .modal-section {
+      border-top: 1px solid var(--border);
+    }
+    .modal-section h3 {
+      font-size: 0.875rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-muted);
+      margin-bottom: var(--space-sm);
+    }
+    .example { margin-bottom: var(--space-md); }
+    .example .source { font-style: italic; }
+    .example .translation {
+      color: var(--text-muted);
+      font-size: 0.9rem;
+    }
+    .wiktionary-frame {
+      width: 100%;
+      height: 40vh;
+      border: none;
+    }
+    .loading {
+      color: var(--text-muted);
+      font-style: italic;
+    }
+
+    .hidden { display: none !important; }
+  </style>
+</head>
+<body>
+  <header class="header">
+    <h1>Lexiclick</h1>
+    <div class="lang-toggle">
+      <button class="lang-btn active" data-lang="fr">FR</button>
+      <button class="lang-btn" data-lang="de">DE</button>
+    </div>
+  </header>
+
+  <main id="input-view" class="input-view">
+    <textarea id="text-input" placeholder="Paste your text here..."></textarea>
+    <button id="start-btn" class="start-btn">Start Reading</button>
+  </main>
+
+  <main id="reading-view" class="reading-view">
+    <a href="#" id="back-link" class="back-link">&larr; New Text</a>
+    <div id="reading-content"></div>
+  </main>
+
+  <div id="modal-backdrop" class="modal-backdrop">
+    <div class="modal">
+      <div class="modal-header">
+        <h2 id="modal-word"></h2>
+        <button id="close-modal" class="close-btn">&times;</button>
+      </div>
+      <div class="modal-section">
+        <h3>Examples (Tatoeba)</h3>
+        <div id="tatoeba-results"><p class="loading">Looking up...</p></div>
+      </div>
+      <div class="modal-section">
+        <h3>Wiktionary</h3>
+        <iframe id="wiktionary-frame" class="wiktionary-frame"
+                sandbox="allow-scripts allow-same-origin"></iframe>
+      </div>
+    </div>
+  </div>
+
+  <script>
+  // === CORE LOGIC ===
+  const LANGS = {
+    fr: { wiktionary: 'fr.wiktionary.org', tatoeba: 'fra' },
+    de: { wiktionary: 'de.wiktionary.org', tatoeba: 'deu' },
+  };
+
+  const TATOEBA_PROXY = 'https://lexiclick-tatoeba.YOURACCOUNTHERE.workers.dev';
+
+  function tokenize(text) {
+    return text
+      .split(/\n\s*\n/)
+      .map(p => p.trim())
+      .filter(p => p !== '')
+      .map(p => p.split(/\s+/));
+  }
+
+  function normalize(raw, lang) {
+    let word = raw.replace(/^[\p{P}]+/u, '').replace(/[\p{P}]+$/u, '');
+    if (word === '') return '';
+    word = word.toLowerCase();
+    if (lang === 'fr') {
+      word = word.replace(/^(l|d|qu|j|n|s|c|m|t)['\u2019]/, '');
+    }
+    return word;
+  }
+
+  function wiktionaryUrl(word, lang) {
+    const term = lang === 'de'
+      ? word.charAt(0).toUpperCase() + word.slice(1)
+      : word;
+    return 'https://' + LANGS[lang].wiktionary + '/wiki/' + encodeURIComponent(term);
+  }
+
+  function tatoebaProxyUrl(word, lang) {
+    return TATOEBA_PROXY + '/tatoeba?q=' + encodeURIComponent(word)
+      + '&from=' + LANGS[lang].tatoeba + '&to=eng';
+  }
+  // === END CORE LOGIC ===
+
+  // === APP ===
+  let currentLang = 'fr';
+
+  const inputView = document.getElementById('input-view');
+  const readingView = document.getElementById('reading-view');
+  const textInput = document.getElementById('text-input');
+  const startBtn = document.getElementById('start-btn');
+  const backLink = document.getElementById('back-link');
+  const readingContent = document.getElementById('reading-content');
+  const modalBackdrop = document.getElementById('modal-backdrop');
+  const modalWord = document.getElementById('modal-word');
+  const closeModalBtn = document.getElementById('close-modal');
+  const tatoebaResults = document.getElementById('tatoeba-results');
+  const wiktionaryFrame = document.getElementById('wiktionary-frame');
+
+  // Language toggle
+  document.querySelectorAll('.lang-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelector('.lang-btn.active').classList.remove('active');
+      btn.classList.add('active');
+      currentLang = btn.dataset.lang;
+      if (readingView.style.display === 'block') {
+        renderText(textInput.value.trim());
+      }
+    });
+  });
+
+  // Start reading
+  startBtn.addEventListener('click', () => {
+    const text = textInput.value.trim();
+    if (!text) return;
+    renderText(text);
+    inputView.classList.add('hidden');
+    readingView.style.display = 'block';
+  });
+
+  function renderText(text) {
+    const paragraphs = tokenize(text);
+    readingContent.innerHTML = '';
+    for (const tokens of paragraphs) {
+      const p = document.createElement('p');
+      for (let i = 0; i < tokens.length; i++) {
+        const span = document.createElement('span');
+        span.className = 'word';
+        span.dataset.raw = tokens[i];
+        span.textContent = tokens[i];
+        span.addEventListener('click', () => openModal(tokens[i]));
+        p.appendChild(span);
+        if (i < tokens.length - 1) {
+          p.appendChild(document.createTextNode(' '));
+        }
+      }
+      readingContent.appendChild(p);
+    }
+  }
+
+  // Back to input
+  backLink.addEventListener('click', (e) => {
+    e.preventDefault();
+    readingView.style.display = 'none';
+    inputView.classList.remove('hidden');
+  });
+  function openModal(raw) {
+    const word = normalize(raw, currentLang);
+    if (!word) return;
+
+    modalWord.textContent = word;
+    tatoebaResults.innerHTML = '<p class="loading">Looking up...</p>';
+    wiktionaryFrame.src = wiktionaryUrl(word, currentLang);
+    modalBackdrop.classList.add('open');
+
+    fetchTatoeba(word);
+  }
+
+  async function fetchTatoeba(word) {
+    try {
+      const resp = await fetch(tatoebaProxyUrl(word, currentLang));
+      if (!resp.ok) throw new Error(resp.status);
+      const data = await resp.json();
+      renderTatoeba(data.results || []);
+    } catch {
+      tatoebaResults.innerHTML = '<p>Failed to load examples.</p>';
+    }
+  }
+
+  function renderTatoeba(results) {
+    if (results.length === 0) {
+      tatoebaResults.innerHTML = '<p>No examples found.</p>';
+      return;
+    }
+    tatoebaResults.innerHTML = '';
+    for (const r of results) {
+      const div = document.createElement('div');
+      div.className = 'example';
+      const translation = r.translations?.[0]?.[0]?.text || 'No translation available';
+      div.innerHTML =
+        '<p class="source">\u201c' + escapeHtml(r.text) + '\u201d</p>' +
+        '<p class="translation">\u2192 \u201c' + escapeHtml(translation) + '\u201d</p>';
+      tatoebaResults.appendChild(div);
+    }
+  }
+
+  function escapeHtml(str) {
+    const el = document.createElement('div');
+    el.textContent = str;
+    return el.innerHTML;
+  }
+
+  function dismissModal() {
+    modalBackdrop.classList.remove('open');
+    wiktionaryFrame.src = '';
+  }
+
+  closeModalBtn.addEventListener('click', dismissModal);
+  modalBackdrop.addEventListener('click', (e) => {
+    if (e.target === modalBackdrop) dismissModal();
+  });
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') dismissModal();
+  });
+  // === END APP ===
+  </script>
+</body>
+</html>
