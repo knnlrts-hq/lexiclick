@@ -280,9 +280,29 @@
   startBtn.addEventListener('click', () => {
     const text = textInput.value.trim();
     if (!text) return;
+    renderText(text);
     inputView.classList.add('hidden');
     readingView.style.display = 'block';
   });
+
+  function renderText(text) {
+    const paragraphs = tokenize(text);
+    readingContent.innerHTML = '';
+    for (const tokens of paragraphs) {
+      const p = document.createElement('p');
+      for (let i = 0; i < tokens.length; i++) {
+        const span = document.createElement('span');
+        span.className = 'word';
+        span.dataset.raw = tokens[i];
+        span.textContent = tokens[i];
+        p.appendChild(span);
+        if (i < tokens.length - 1) {
+          p.appendChild(document.createTextNode(' '));
+        }
+      }
+      readingContent.appendChild(p);
+    }
+  }
 
   // Back to input
   backLink.addEventListener('click', (e) => {
