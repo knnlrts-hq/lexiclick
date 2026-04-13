@@ -224,7 +224,7 @@
     de: { wiktionary: 'de.wiktionary.org', tatoeba: 'deu' },
   };
 
-  const TATOEBA_PROXY = 'https://lexiclick-tatoeba.YOURACCOUNTHERE.workers.dev';
+  const TATOEBA_PROXY = 'https://lexiclick-tatoeba.knnlrts-hq.workers.dev';
 
   function tokenize(text) {
     return text
@@ -336,7 +336,7 @@
       const resp = await fetch(tatoebaProxyUrl(word, currentLang));
       if (!resp.ok) throw new Error(resp.status);
       const data = await resp.json();
-      renderTatoeba(data.results || []);
+      renderTatoeba(data.data || []);
     } catch {
       tatoebaResults.innerHTML = '<p>Failed to load examples.</p>';
     }

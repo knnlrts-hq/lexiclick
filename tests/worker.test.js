@@ -38,12 +38,13 @@ describe('worker', () => {
   });
 
   it('proxies valid request to tatoeba API', async () => {
-    const mockBody = JSON.stringify({ results: [{ text: 'Bonjour!' }] });
+    const mockBody = JSON.stringify({ data: [{ text: 'Bonjour!' }] });
     globalThis.fetch = async (url) => {
       assert.ok(url.includes('api.tatoeba.org/v1/sentences'));
       assert.ok(url.includes('q=bonjour'));
       assert.ok(url.includes('lang=fra'));
-      assert.ok(url.includes('trans_lang=eng'));
+      assert.ok(url.includes('trans:lang=eng'));
+      assert.ok(url.includes('sort=relevance'));
       assert.ok(url.includes('limit=5'));
       return new Response(mockBody, { status: 200 });
     };
@@ -57,7 +58,7 @@ describe('worker', () => {
     assert.equal(res.headers.get('Cache-Control'), 'public, max-age=86400');
 
     const data = await res.json();
-    assert.equal(data.results[0].text, 'Bonjour!');
+    assert.equal(data.data[0].text, 'Bonjour!');
   });
 
   it('handles CORS preflight (OPTIONS)', async () => {
