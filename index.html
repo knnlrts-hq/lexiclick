@@ -278,6 +278,9 @@
       document.querySelector('.lang-btn.active').classList.remove('active');
       btn.classList.add('active');
       currentLang = btn.dataset.lang;
+      if (readingView.style.display === 'block') {
+        renderText(textInput.value.trim());
+      }
     });
   });
 
