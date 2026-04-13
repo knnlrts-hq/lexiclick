@@ -28,7 +28,8 @@ export default {
       'https://api.tatoeba.org/v1/sentences' +
       '?lang=' + encodeURIComponent(from) +
       '&q=' + encodeURIComponent(q) +
-      '&trans_lang=' + encodeURIComponent(to) +
+      '&trans:lang=' + encodeURIComponent(to) +
+      '&sort=relevance' +
       '&limit=5';
 
     const resp = await fetch(tatoebaUrl);
