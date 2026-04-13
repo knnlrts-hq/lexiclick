@@ -8,6 +8,13 @@
 <body>
   <script>
   // === CORE LOGIC ===
+  const LANGS = {
+    fr: { wiktionary: 'fr.wiktionary.org', tatoeba: 'fra' },
+    de: { wiktionary: 'de.wiktionary.org', tatoeba: 'deu' },
+  };
+
+  const TATOEBA_PROXY = 'https://lexiclick-tatoeba.YOURACCOUNTHERE.workers.dev';
+
   function tokenize(text) {
     return text
       .split(/\n\s*\n/)
@@ -15,9 +22,28 @@
       .filter(p => p !== '')
       .map(p => p.split(/\s+/));
   }
-  function normalize() {}
-  function wiktionaryUrl() {}
-  function tatoebaProxyUrl() {}
+
+  function normalize(raw, lang) {
+    let word = raw.replace(/^[\p{P}]+/u, '').replace(/[\p{P}]+$/u, '');
+    if (word === '') return '';
+    word = word.toLowerCase();
+    if (lang === 'fr') {
+      word = word.replace(/^(l|d|qu|j|n|s|c|m|t)['\u2019]/, '');
+    }
+    return word;
+  }
+
+  function wiktionaryUrl(word, lang) {
+    const term = lang === 'de'
+      ? word.charAt(0).toUpperCase() + word.slice(1)
+      : word;
+    return 'https://' + LANGS[lang].wiktionary + '/wiki/' + encodeURIComponent(term);
+  }
+
+  function tatoebaProxyUrl(word, lang) {
+    return TATOEBA_PROXY + '/tatoeba?q=' + encodeURIComponent(word)
+      + '&from=' + LANGS[lang].tatoeba + '&to=eng';
+  }
   // === END CORE LOGIC ===
   </script>
 </body>
