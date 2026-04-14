@@ -127,7 +127,7 @@
       background: white;
       border-radius: 8px;
       width: 90%;
-      max-width: 600px;
+      max-width: 860px;
       max-height: 70vh;
       overflow-y: auto;
       box-shadow: 0 4px 24px rgba(0, 0, 0, 0.15);
@@ -344,6 +344,13 @@
     }
   }
 
+  function extractEnglishTranslation(translations) {
+    if (!Array.isArray(translations) || translations.length === 0) return null;
+    const eng = translations.find(t => t && t.lang === 'eng' && t.text);
+    if (eng) return eng.text;
+    return translations[0]?.text || null;
+  }
+
   function renderTatoeba(results) {
     if (results.length === 0) {
       tatoebaResults.innerHTML = '<p>No examples found.</p>';
@@ -353,7 +360,7 @@
     for (const r of results) {
       const div = document.createElement('div');
       div.className = 'example';
-      const translation = r.translations?.[0]?.[0]?.text || 'No translation available';
+      const translation = extractEnglishTranslation(r.translations) || 'No translation available';
       div.innerHTML =
         '<p class="source">\u201c' + escapeHtml(r.text) + '\u201d</p>' +
         '<p class="translation">\u2192 \u201c' + escapeHtml(translation) + '\u201d</p>';
