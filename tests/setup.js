@@ -7,7 +7,7 @@ export function loadCoreFunctions() {
 
   const exports = [
     'LANGS',
-    'tokenize', 'normalize', 'wiktionaryUrl', 'tatoebaProxyUrl',
+    'tokenize', 'normalize', 'wiktionaryUrl', 'tatoebaUrl',
   ];
   const returnExpr = exports
     .map(name => `${name}: typeof ${name} !== 'undefined' ? ${name} : undefined`)
